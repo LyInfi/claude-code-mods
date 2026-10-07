@@ -1,0 +1,12 @@
+{
+  "name": "lyinfi-mods",
+  "owner": { "name": "LyInfi", "url": "https://github.com/LyInfi" },
+  "description": "Mods for Claude Code: games and panes that live inside the TUI.",
+  "plugins": [
+    {
+      "name": "poker",
+      "source": "./mods/poker",
+      "description": "No-Limit Texas Hold'em against styled bots in a pane: /poker"
+    }
+  ]
+}

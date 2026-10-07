@@ -1,0 +1,66 @@
+import type { Lang } from '../types'
+export type { Lang }
+
+const STRINGS = {
+  title: { zh: '德州扑克', en: "Texas Hold'em" },
+  you: { zh: '你', en: 'You' },
+  bankroll: { zh: '余额', en: 'Bankroll' },
+  hands: { zh: '手数', en: 'Hands' },
+  net: { zh: '盈亏', en: 'Net' },
+  pot: { zh: '底池', en: 'Pot' },
+  board: { zh: '公共牌', en: 'Board' },
+  fold: { zh: '弃牌', en: 'Fold' },
+  check: { zh: '过牌', en: 'Check' },
+  call: { zh: '跟注', en: 'Call' },
+  bet: { zh: '下注', en: 'Bet' },
+  raise: { zh: '加注', en: 'Raise' },
+  allIn: { zh: '全下', en: 'All-in' },
+  folded: { zh: '已弃牌', en: 'Folded' },
+  isAllIn: { zh: '全下', en: 'All-in' },
+  nextHand: { zh: '立即开始', en: 'Deal now' },
+  autoNext: { zh: '下一手即将自动开始…', en: 'Next hand coming up…' },
+  rebuy: { zh: '补码', en: 'Rebuy' },
+  leave: { zh: '离桌', en: 'Leave' },
+  size9: { zh: '9人桌', en: '9-max' },
+  size6: { zh: '6人桌', en: '6-max' },
+  size2: { zh: '单挑', en: 'Heads-up' },
+  buyIn: { zh: '买入', en: 'Buy-in' },
+  chooseTable: { zh: '选择牌桌入座', en: 'Pick a table to sit down' },
+  topUp: { zh: '领取筹码', en: 'Top-up' },
+  amount: { zh: '金额', en: 'Amount' },
+  halfPot: { zh: '½底池', en: '½ Pot' },
+  fullPot: { zh: '底池', en: 'Pot' },
+  waiting: { zh: '等待其他玩家…', en: 'Waiting for others…' },
+  yourTurn: { zh: '轮到你了', en: 'Your turn' },
+  wins: { zh: '赢得', en: 'wins' },
+  split: { zh: '平分', en: 'split' },
+  mainPot: { zh: '主池', en: 'Main pot' },
+  sidePot: { zh: '边池', en: 'Side pot' },
+  busted: { zh: '你的筹码输光了。', en: 'You are out of chips.' },
+  broke: { zh: '余额不足一次买入，可以领取筹码。', en: 'Not enough for a buy-in: take a Top-up.' },
+  alertPermission: { zh: '⚠ Claude 需要你的授权', en: '⚠ Claude needs your permission' },
+  alertQuestion: { zh: '⚠ Claude 在问你问题', en: '⚠ Claude has a question for you' },
+  alertDone: { zh: '✓ Claude 已完成本轮', en: '✓ Claude finished its turn' },
+  lang: { zh: 'EN', en: '中文' },
+  cardStyle: { zh: '牌面', en: 'Cards' },
+  toCallHint: { zh: '需跟', en: 'to call' },
+  potOdds: { zh: '底池赔率', en: 'Pot odds' },
+  logTitle: { zh: '行动记录', en: 'Action log' },
+  preflop: { zh: '翻前', en: 'Pre' },
+  flop: { zh: '翻牌', en: 'Flop' },
+  turn: { zh: '转牌', en: 'Turn' },
+  river: { zh: '河牌', en: 'River' },
+  settle: { zh: '结算', en: 'Result' },
+  statsTitle: { zh: '战绩', en: 'Stats' },
+  topUps: { zh: '领取次数', en: 'Top-ups' },
+  biggestPot: { zh: '最大赢池', en: 'Biggest pot' },
+} as const
+
+export type StringKey = keyof typeof STRINGS
+export const t = (lang: Lang, key: StringKey) => STRINGS[key][lang]
+
+const CATEGORY_NAMES = {
+  zh: ['高牌', '一对', '两对', '三条', '顺子', '同花', '葫芦', '四条', '同花顺'],
+  en: ['High card', 'One pair', 'Two pair', 'Three of a kind', 'Straight', 'Flush', 'Full house', 'Four of a kind', 'Straight flush'],
+} as const
+export const categoryName = (lang: Lang, category: number) => CATEGORY_NAMES[lang][category] ?? ''

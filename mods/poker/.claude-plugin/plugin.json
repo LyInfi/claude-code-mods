@@ -1,0 +1,11 @@
+{
+  "name": "poker",
+  "version": "0.1.0",
+  "description": "No-Limit Texas Hold'em against styled bots in a Claude Code pane (/poker)",
+  "author": { "name": "LyInfi", "url": "https://github.com/LyInfi" },
+  "homepage": "https://github.com/LyInfi/claude-code-mods",
+  "repository": "https://github.com/LyInfi/claude-code-mods",
+  "license": "MIT",
+  "keywords": ["poker", "texas-holdem", "game", "pane"],
+  "types": "./types/index.d.ts"
+}
