@@ -19,7 +19,7 @@ Inside Claude Code:
 
 Then type `/poker`.
 
-> **Compatibility.** These mods use Claude Code's function-hooks plugin API, which is in early access and may change between releases. Use a recent Claude Code; if a mod stops loading after an update, please open an issue.
+> **Compatibility.** These mods use Claude Code's function-hooks plugin API, which is in early access and may change between releases. They are tested on Claude Code 2.1.292 (CI pins that build); if a mod stops loading after an update, please open an issue.
 
 ## poker
 
@@ -77,7 +77,7 @@ The rules engine (`mods/poker/engine`) is plain TypeScript with no UI; bots plug
 
 然后输入 `/poker` 打开牌桌。
 
-> **兼容性**：这些 mod 使用的函数钩子接口目前处于早期阶段，不同版本之间可能有变动。请使用较新版本的 Claude Code；如果升级后无法加载，欢迎提 issue。
+> **兼容性**：这些 mod 使用的函数钩子接口目前处于早期阶段，不同版本之间可能有变动。目前在 Claude Code 2.1.292 上测试（CI 固定使用这个版本）；如果升级后无法加载，欢迎提 issue。
 
 ### poker：德州扑克
 
