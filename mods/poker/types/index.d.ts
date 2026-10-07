@@ -71,6 +71,9 @@ export type Lang = 'zh' | 'en'
 
 export type CardStyle = 'compact' | 'boxed'
 
+/** How amounts at the Table read: in chips, or in big blinds. */
+export type ChipUnit = 'chips' | 'bb'
+
 /** What the Player keeps across Sessions. */
 export type Profile = {
   /** Chips off the Table. */
@@ -83,6 +86,7 @@ export type Profile = {
   biggestPot: number
   lang: Lang
   cardStyle: CardStyle
+  chipUnit: ChipUnit
   /** The Table Size last chosen in the Lobby. */
   tableSize: TableSize
 }
@@ -112,6 +116,8 @@ declare module 'claude-code' {
       alert: Alert | null
       /** The first action log row shown; -1 follows the newest rows as the Hand goes on. */
       logScroll: number
+      /** Whether the settings row under the header is open. */
+      settings: boolean
     }
   }
 }

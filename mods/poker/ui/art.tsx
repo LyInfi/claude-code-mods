@@ -19,6 +19,10 @@ const cardInk = (c: Card): Ink => ({ bold: true, color: c.charAt(1) === 'h' || c
 
 export const chips = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 
+/** Amounts at a Table as the Player reads them: chips, or big blinds to one decimal. */
+export const amountOf = (g: Game, table: Pick<TableState, 'bigBlind'>) => (n: number) =>
+  g.profile.chipUnit === 'bb' ? `${Math.round((n / table.bigBlind) * 10) / 10}BB` : chips(n)
+
 /** Compact cards as runs: `A♠ K♥`, face down `░░`, an empty board place `··`. */
 function compact(cards: (Card | null)[], slots = cards.length): [string, Ink?][] {
   const runs: [string, Ink?][] = []
@@ -100,6 +104,7 @@ const LAYOUTS: Record<number, Layout> = {
 
 /** The table drawn in box characters: each Seat in its own ring around the felt, bets and the dealer button on the felt, the board in the middle. */
 export function drawTable(els: Els, g: Game, table: TableState, lang: Lang) {
+  const fmt = amountOf(g, table)
   const tall = g.profile.cardStyle === 'boxed'
   const hand = table.hand
   const won = winners(hand)
@@ -151,7 +156,7 @@ export function drawTable(els: Els, g: Game, table: TableState, lang: Lang) {
     const o = table.seats[seat]!
     const hs = hand?.seats[seat]
     if (hs && hs.stack === 0 && !hs.folded && hand?.result === null) return [[t(lang, 'isAllIn'), { color: 'red', bold: true }]]
-    return [[chips(o.stack), hs?.folded ? DIM : {}]]
+    return [[fmt(o.stack), hs?.folded ? DIM : {}]]
   }
 
   const hole = (seat: number): [string, Ink?][] => {
@@ -177,8 +182,8 @@ export function drawTable(els: Els, g: Game, table: TableState, lang: Lang) {
     const amount = hand?.result ? winnings(hand, seat) : (hand?.seats[seat]?.bet ?? 0)
     if (amount > 0) {
       if (runs.length) runs.push([' '])
-      if (hand?.result) runs.push([`+${chips(amount)}`, { color: 'green', bold: true }])
-      else runs.push(['● ', CHIP], [chips(amount), CHIP])
+      if (hand?.result) runs.push([`+${fmt(amount)}`, { color: 'green', bold: true }])
+      else runs.push(['● ', CHIP], [fmt(amount), CHIP])
     }
     return runs
   }
@@ -213,7 +218,7 @@ export function drawTable(els: Els, g: Game, table: TableState, lang: Lang) {
   const board = hand?.board ?? []
   if (tall) boxed(canvas, mid, boardRow, board, 5)
   else canvas.center(mid, boardRow, compact(board, 5))
-  if (hand) canvas.center(mid, potRow, [[`${t(lang, 'pot')} `, DIM], [chips(potBehind(hand)), { bold: true }]])
+  if (hand) canvas.center(mid, potRow, [[`${t(lang, 'pot')} `, DIM], [fmt(potBehind(hand)), { bold: true }]])
 
   // the Player at the bottom, in a ring wide enough for boxed cards
   const me = table.playerSeat
@@ -247,6 +252,7 @@ export function drawTable(els: Els, g: Game, table: TableState, lang: Lang) {
 
 /** The narrow layout: one row per Seat with its markers, cards, Stack and bet, then the board and the pot. */
 export function drawList(els: Els, g: Game, table: TableState, lang: Lang, columns: number) {
+  const fmt = amountOf(g, table)
   const hand = table.hand
   const won = winners(hand)
   const seats = table.seats.flatMap((o, i) => (o ? [i] : []))
@@ -262,13 +268,13 @@ export function drawList(els: Els, g: Game, table: TableState, lang: Lang, colum
     canvas.put(10, row, hand?.button === seat ? ' D ' : '', { inverse: true, bold: true })
     canvas.put(14, row, blindTag(table, seat) ?? '', DIM)
     if (hs) canvas.spans(18, row, hs.folded ? [[t(lang, 'folded'), DIM]] : compact(faceUp(table, seat) ? hs.holeCards : [null, null]))
-    canvas.right(31, row, hs && hs.stack === 0 && !hs.folded && hand?.result === null ? [[t(lang, 'isAllIn'), { color: 'red', bold: true }]] : [[chips(o.stack), hs?.folded ? DIM : {}]])
-    if (hand?.result && won.has(seat)) canvas.spans(33, row, [[`+${chips(winnings(hand, seat))}`, { color: 'green', bold: true }]])
-    else if (hs && hs.bet > 0 && !hand?.result) canvas.spans(33, row, [['● ', CHIP], [chips(hs.bet), CHIP]])
+    canvas.right(31, row, hs && hs.stack === 0 && !hs.folded && hand?.result === null ? [[t(lang, 'isAllIn'), { color: 'red', bold: true }]] : [[fmt(o.stack), hs?.folded ? DIM : {}]])
+    if (hand?.result && won.has(seat)) canvas.spans(33, row, [[`+${fmt(winnings(hand, seat))}`, { color: 'green', bold: true }]])
+    else if (hs && hs.bet > 0 && !hand?.result) canvas.spans(33, row, [['● ', CHIP], [fmt(hs.bet), CHIP]])
   })
   const y = seats.length + 1
   const x = canvas.spans(2, y, compact(hand?.board ?? [], 5))
-  if (hand) canvas.spans(x + 3, y, [[`${t(lang, 'pot')} `, DIM], [chips(potBehind(hand)), { bold: true }]])
+  if (hand) canvas.spans(x + 3, y, [[`${t(lang, 'pot')} `, DIM], [fmt(potBehind(hand)), { bold: true }]])
   return canvas.draw(els, 'list')
 }
 
@@ -288,6 +294,7 @@ type Runs = [string, Ink?][]
  * then the pots. The newest rows show when they outgrow the box.
  */
 export function drawLog(els: Els, g: Game, table: TableState, lang: Lang, cols: number, scroll: number, on: { up: () => void; down: () => void }) {
+  const fmt = amountOf(g, table)
   const inner = cols - 4
   const lines: Runs[] = []
   let line: Runs = []
@@ -323,10 +330,10 @@ export function drawLog(els: Els, g: Game, table: TableState, lang: Lang, cols: 
   for (const e of g.log) {
     switch (e.kind) {
       case 'blind':
-        add([name(e.seat), [` ${e.blind} `, DIM], [chips(e.amount)]])
+        add([name(e.seat), [` ${e.blind} `, DIM], [fmt(e.amount)]])
         break
       case 'action': {
-        const amount: Runs = e.action === 'fold' || e.action === 'check' ? [] : [[` ${chips(e.to)}`]]
+        const amount: Runs = e.action === 'fold' || e.action === 'check' ? [] : [[` ${fmt(e.to)}`]]
         add([name(e.seat), [` ${t(lang, e.action)}`, DIM], ...amount])
         break
       }
@@ -344,7 +351,7 @@ export function drawLog(els: Els, g: Game, table: TableState, lang: Lang, cols: 
         const who = e.winners.map((s) => name(s)[0]).join(', ')
         const verb = e.winners.length > 1 ? t(lang, 'split') : t(lang, 'wins')
         const how = e.category === null ? '' : ` (${categoryName(lang, e.category)})`
-        line.push([`${label} ${chips(e.amount)}: ${who} ${verb}${how}`, { color: 'green' }])
+        line.push([`${label} ${fmt(e.amount)}: ${who} ${verb}${how}`, { color: 'green' }])
         used = inner
         break
       }

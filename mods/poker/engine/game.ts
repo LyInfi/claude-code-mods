@@ -14,6 +14,7 @@ export const newProfile = (): Profile => ({
   biggestPot: 0,
   lang: 'zh',
   cardStyle: 'compact',
+  chipUnit: 'chips',
   tableSize: 6,
 })
 

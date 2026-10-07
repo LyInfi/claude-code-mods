@@ -3,7 +3,7 @@ import { evaluate, Category } from '../engine/evaluate'
 import { legalActions, type HandState } from '../engine/hand'
 import { TABLE_SIZES, buyIn, isHandLive, type TableState } from '../engine/table'
 import { BUY_IN, STAKE, canLeave, needsTopUp, presets } from '../engine/game'
-import { ACCENT, TABLE_COLS, chips, drawList, drawLog, drawLogo, drawTable } from './art'
+import { ACCENT, TABLE_COLS, amountOf, chips, drawList, drawLog, drawLogo, drawTable } from './art'
 import type { Els } from './canvas'
 import { categoryName, t, type Lang } from './i18n'
 
@@ -21,22 +21,25 @@ export type Intents = {
   topUp: () => void
   toggleLang: () => void
   toggleCards: () => void
+  toggleUnit: () => void
+  toggleSettings: () => void
   /** Moves the action log by rows: positive toward older lines. */
   scrollLog: (rows: number) => void
 }
 
 /** Rows kept for the controls, filled or not, so the block above them keeps its place. */
-const CONTROL_ROWS = 3
+const CONTROL_ROWS = 4
 
 const signed = (n: number) => (n > 0 ? `+${chips(n)}` : n < 0 ? `-${chips(-n)}` : '0')
 
 /** The whole pane: the header across the top, everything else centered in the space below it. */
-export function tableView(els: Els, g: Game, alert: Alert | null, logScroll: number, columns: number, rows: number, background: string | undefined, on: Intents) {
+export function tableView(els: Els, g: Game, alert: Alert | null, logScroll: number, settingsOpen: boolean, columns: number, rows: number, background: string | undefined, on: Intents) {
   const { Box, Text } = els
   const lang = g.profile.lang
   return (
     <Box flexDirection="column" width={columns} minHeight={rows} backgroundColor={background}>
-      {header(els, g, lang, on)}
+      {header(els, g, lang, settingsOpen, on)}
+      {settingsOpen && settings(els, g, lang, on)}
       {/* one row held for the alert, shown or not, so nothing below it moves */}
       <Box justifyContent="center" height={1}>
         {alert && (
@@ -52,9 +55,9 @@ export function tableView(els: Els, g: Game, alert: Alert | null, logScroll: num
   )
 }
 
-/** One line: the game, the Stake, the Bankroll and the result on the left; the settings on the right. */
-function header(els: Els, g: Game, lang: Lang, on: Intents) {
-  const { Box, Text } = els
+/** One line: the game, the Stake, the Bankroll and the result on the left; the settings button on the right. */
+function header(els: Els, g: Game, lang: Lang, settingsOpen: boolean, on: Intents) {
+  const { Box, Text, Button } = els
   const p = g.profile
   const stake = g.table ? ` · ${g.table.smallBlind}/${g.table.bigBlind}` : ''
   return (
@@ -72,9 +75,9 @@ function header(els: Els, g: Game, lang: Lang, on: Intents) {
           {signed(p.net)}
         </Text>
       </Text>
-      <Box flexDirection="row" gap={2}>
-        {prefs(els, g, lang, on)}
-      </Box>
+      <Button key="settings" hotkey="s" plain onPress={on.toggleSettings}>
+        {`${t(lang, 'settings')} ${settingsOpen ? '▴' : '▾'}`}
+      </Button>
     </Box>
   )
 }
@@ -116,16 +119,22 @@ function lobby(els: Els, g: Game, lang: Lang, columns: number, on: Intents) {
   )
 }
 
-function prefs(els: Els, g: Game, lang: Lang, on: Intents) {
-  const { Button } = els
-  return [
-    <Button key="lang" hotkey="l" plain onPress={on.toggleLang}>
-      {t(lang, 'lang')}
-    </Button>,
-    <Button key="cards" hotkey="v" plain onPress={on.toggleCards}>
-      {`${t(lang, 'cardStyle')} ${g.profile.cardStyle === 'compact' ? 'A♠' : '[A♠]'}`}
-    </Button>,
-  ]
+/** The settings row under the header, while open: each setting a button showing its current value. */
+function settings(els: Els, g: Game, lang: Lang, on: Intents) {
+  const { Box, Button } = els
+  return (
+    <Box flexDirection="row" gap={3} justifyContent="flex-end" flexWrap="wrap">
+      <Button key="lang" hotkey="l" plain onPress={on.toggleLang}>
+        {t(lang, 'language')}
+      </Button>
+      <Button key="cards" hotkey="v" plain onPress={on.toggleCards}>
+        {`${t(lang, 'cardStyle')} ${g.profile.cardStyle === 'compact' ? 'A♠' : '[A♠]'}`}
+      </Button>
+      <Button key="unit" hotkey="u" plain onPress={on.toggleUnit}>
+        {`${t(lang, 'unit')} ${g.profile.chipUnit === 'bb' ? 'BB' : t(lang, 'chips')}`}
+      </Button>
+    </Box>
+  )
 }
 
 function seated(els: Els, g: Game, table: TableState, lang: Lang, columns: number, logScroll: number, on: Intents) {
@@ -164,6 +173,7 @@ function controls(els: Els, g: Game, table: TableState, lang: Lang, on: Intents)
   const live = isHandLive(table)
   const myTurn = live && hand!.toAct === table.playerSeat
   const stack = table.seats[table.playerSeat]!.stack
+  const fmt = amountOf(g, table)
 
   if (myTurn) {
     const legal = legalActions(hand!)
@@ -186,26 +196,31 @@ function controls(els: Els, g: Game, table: TableState, lang: Lang, on: Intents)
             </Button>
           ) : (
             <Button key="call" hotkey="c" plain autoFocus onPress={() => on.act('call')}>
-              {`${t(lang, 'call')} ${chips(legal.toCall)}`}
+              {`${t(lang, 'call')} ${fmt(legal.toCall)}`}
             </Button>
           )}
           {legal.raise && (
             <Button key="raise" hotkey="r" plain onPress={() => on.act('minRaise')}>
-              {`${raiseVerb} ${chips(legal.raise.min)}`}
+              {`${raiseVerb} ${fmt(legal.raise.min)}`}
             </Button>
           )}
           <Button key="allin" hotkey="a" plain onPress={() => on.act('allIn')}>
-            {`${t(lang, 'allIn')} ${chips(stack + hand!.seats[table.playerSeat]!.bet)}`}
+            {`${t(lang, 'allIn')} ${fmt(stack + hand!.seats[table.playerSeat]!.bet)}`}
           </Button>
         </Box>
         {legal.raise && (
           <Box flexDirection="row" gap={2} flexWrap="wrap" paddingLeft={2}>
             {presets(hand!).map((p) => (
               <Button key={`preset-${p.key}`} hotkey={p.key} plain onPress={() => on.wager(p.to)}>
-                {`${p.label === 'x2.5' ? '2.5x' : t(lang, p.label)} ${chips(p.to)}`}
+                {`${p.label === 'x2.5' ? '2.5x' : t(lang, p.label)} ${fmt(p.to)}`}
               </Button>
             ))}
-            <Input key="amount" label={raiseVerb} placeholder={`${legal.raise.min}–${legal.raise.max}`} onSubmit={(v) => on.amount(v)} />
+          </Box>
+        )}
+        {/* on a row of its own, so the field growing as it is typed in moves nothing */}
+        {legal.raise && (
+          <Box paddingLeft={2}>
+            <Input key="amount" label={raiseVerb} placeholder={`${fmt(legal.raise.min)}–${fmt(legal.raise.max)}`} onSubmit={(v) => on.amount(v)} />
           </Box>
         )}
       </Box>

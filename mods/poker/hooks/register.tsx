@@ -21,9 +21,11 @@ export const NEXT_HAND_MS = 3000
 const GAME = { plugin: 'poker', key: 'game' } as const
 const ALERT = { plugin: 'poker', key: 'alert' } as const
 const LOG_SCROLL = { plugin: 'poker', key: 'logScroll' } as const
+const SETTINGS = { plugin: 'poker', key: 'settings' } as const
 const game = atom(GAME, { table: null, profile: newProfile(), log: [] } as Game)
 const alert = atom(ALERT, null as Alert | null)
 const logScroll = atom(LOG_SCROLL, -1)
+const settingsOpen = atom(SETTINGS, false)
 
 /**
  * Scrolls the action log by rows, positive toward older lines. Scrolling up
@@ -120,9 +122,13 @@ function intents($: EngineInterface): Intents {
     wager: (to) => playerAction($, (g) => wager(g.table!.hand!, to)),
     amount: (text) =>
       playerAction($, (g) => {
-        const to = Number.parseInt(text.replace(/[,\s]/g, ''), 10)
-        if (!Number.isFinite(to)) throw new Error(t(g.profile.lang, 'amount') + '?')
-        return wager(g.table!.hand!, to)
+        // in the unit the Table is shown in, or in big blinds whatever it is when typed with `bb`
+        const plain = text.replace(/[,\s]/g, '')
+        const inBlinds = g.profile.chipUnit === 'bb' || /bb$/i.test(plain)
+        const value = Number.parseFloat(plain.replace(/bb$/i, ''))
+        if (!Number.isFinite(value)) throw new Error(t(g.profile.lang, 'amount') + '?')
+        const hand = g.table!.hand!
+        return wager(hand, Math.round(inBlinds ? value * hand.bigBlind : value))
       }),
     next: () => change($, (g) => deal(g, cryptoRng)),
     scrollLog: (rows) => void scrollLog($, rows),
@@ -133,6 +139,8 @@ function intents($: EngineInterface): Intents {
     toggleLang: () => change($, (g) => ({ ...g, profile: { ...g.profile, lang: g.profile.lang === 'zh' ? 'en' : 'zh' } })),
     toggleCards: () =>
       change($, (g) => ({ ...g, profile: { ...g.profile, cardStyle: g.profile.cardStyle === 'compact' ? 'boxed' : 'compact' } })),
+    toggleSettings: () => void update($, settingsOpen, (open) => !open),
+    toggleUnit: () => change($, (g) => ({ ...g, profile: { ...g.profile, chipUnit: g.profile.chipUnit === 'bb' ? 'chips' : 'bb' } })),
   }
 }
 
@@ -163,7 +171,7 @@ export const register: Register = (on) => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'poker',
-      description: "Texas Hold'em against bots in a side pane: /poker [stats|lang|cards|topup]",
+      description: "Texas Hold'em against bots in a side pane: /poker [stats|lang|cards|units|topup]",
     })
     // a reload keeps the session's Game; a new session recovers the saved Profile
     const current = await $.state.get(GAME)
@@ -212,6 +220,9 @@ export const register: Register = (on) => {
       case 'cards':
         await intents($).toggleCards()
         return { text: `cards: ${g.profile.cardStyle === 'compact' ? 'boxed' : 'compact'}` }
+      case 'units':
+        await intents($).toggleUnit()
+        return { text: `units: ${g.profile.chipUnit === 'bb' ? 'chips' : 'big blinds'}` }
       case 'topup':
         await intents($).topUp()
         return { text: `${t(lang, 'bankroll')}: ${chips((await read($, game)).profile.bankroll)}` }
@@ -228,7 +239,8 @@ export const register: Register = (on) => {
     const up = await read($, logScroll)
     const columns = e.props.bodyColumns ?? e.viewport?.columns ?? 80
     const rows = e.props.scroll?.bodyRows ?? e.viewport?.rows ?? 24
-    return tableView(els as never, g, why, up, columns, rows, await background($), intents($))
+    const open = await read($, settingsOpen)
+    return tableView(els as never, g, why, up, open, columns, rows, await background($), intents($))
   })
 
   // the wheel scrolls the action log while the whole pane fits; otherwise it scrolls the pane

@@ -29,7 +29,7 @@ A No-Limit Hold'em cash game at 5/10, drawn in box characters: each seat in its 
 - **Full rules.** Side pots, short all-ins that don't reopen the betting, split pots with the odd chip, heads-up blinds.
 - **Plays around your work.** Claude asking for permission or a question pauses the dealing and shows an alert; finishing a turn shows a short note.
 - **Bankroll that persists.** 10,000 to start, 1,000 buy-ins, stats across sessions, `/poker topup` when you're broke.
-- **Chinese and English**, compact (`A♠`) or boxed card faces, a scrollable action log.
+- **Chinese and English**, compact (`A♠`) or boxed card faces, amounts in chips or big blinds, a scrollable action log.
 
 ### Keys (while the pane has focus)
 
@@ -37,11 +37,12 @@ A No-Limit Hold'em cash game at 5/10, drawn in box characters: each seat in its 
 | --- | --- |
 | `9` / `6` / `2` | sit down at a 9-max / 6-max / heads-up table (in the lobby) |
 | `f` / `c` / `r` / `a` | fold / check or call / min raise / all in |
-| `1`–`4` | raise 2.5x / ½ pot / pot / all in; or type an amount and press Enter |
+| `1`–`4` | raise 2.5x the bet / ½ pot / pot / all in; or type an amount and press Enter (in big blinds while they are shown, or with a `bb` suffix) |
 | `n` | deal the next hand now (it deals itself after 3 seconds) |
 | `b` / `q` | rebuy / leave the table |
 | `k` / `j` | scroll the action log up / down (the mouse wheel works too) |
-| `l` / `v` | switch language / card style |
+| `s` | open or close the settings row |
+| `l` / `v` / `u` | in settings: switch language / card style / chips or big blinds |
 | `Esc` | back to the prompt |
 
 Commands: `/poker`, `/poker stats`, `/poker lang`, `/poker cards`, `/poker topup`.
@@ -87,6 +88,6 @@ The rules engine (`mods/poker/engine`) is plain TypeScript with no UI; bots plug
 - **完整规则**：边池、不足额全下不重开加注、平分底池的零头筹码、单挑时的盲注规则都已实现。
 - **不打扰工作**：Claude 请求授权或向你提问时，会暂停发牌并在牌桌上提醒；Claude 完成一轮时也会轻提示。
 - **筹码跨会话保存**：初始余额 10,000，每次买入 1,000，战绩跨会话累计；输光后可以用 `/poker topup` 领取筹码。
-- **其他**：中英文界面可切换，牌面有紧凑（`A♠`）和方框两种样式，行动记录可以上下滚动。
+- **其他**：中英文界面可切换，牌面有紧凑（`A♠`）和方框两种样式，金额可以切换成按大盲数（BB）显示，行动记录可以上下滚动。
 
 快捷键见上方英文部分的表格。
